@@ -16,18 +16,18 @@ contract TokenVesting is ITokenVesting, Ownable, ReentrancyGuard {
   using SafeERC20 for IERC20;
 
   // address of the ERC20 token
-  IERC20 private immutable _token;
+  IERC20 public immutable _token;
 
   bytes32[] private vestingSchedulesIds;
-  mapping(bytes32 => VestingSchedule) private vestingSchedules;
-  uint256 private vestingSchedulesTotalAmount;
-  mapping(address => uint256) private holdersVestingCount;
+  mapping(bytes32 => VestingSchedule) public vestingSchedules;
+  uint256 public vestingSchedulesTotalAmount;
+  mapping(address => uint256) public holdersVestingCount;
 
   /**
    * @dev Reverts if no vesting schedule matches the passed identifier.
    */
   modifier onlyIfVestingScheduleExists(bytes32 vestingScheduleId) {
-    require(vestingSchedules[vestingScheduleId].initialized);
+    require(vestingSchedules[vestingScheduleId].initialized, "invalid-vesting-schedule");
     _;
   }
 
@@ -35,8 +35,8 @@ contract TokenVesting is ITokenVesting, Ownable, ReentrancyGuard {
    * @dev Reverts if the vesting schedule does not exist or has been revoked.
    */
   modifier onlyIfVestingScheduleNotRevoked(bytes32 vestingScheduleId) {
-    require(vestingSchedules[vestingScheduleId].initialized);
-    require(!vestingSchedules[vestingScheduleId].revoked);
+    require(vestingSchedules[vestingScheduleId].initialized, "vesting-schedule-not-initialized");
+    require(!vestingSchedules[vestingScheduleId].revoked, "vesting-schedule-revoked");
     _;
   }
 
@@ -45,7 +45,7 @@ contract TokenVesting is ITokenVesting, Ownable, ReentrancyGuard {
    * @param token_ address of the ERC20 token contract
    */
   constructor(address token_) {
-    require(token_ != address(0x0));
+    require(token_ != address(0x0), "invalid-token-address");
     _token = IERC20(token_);
   }
 
@@ -53,59 +53,6 @@ contract TokenVesting is ITokenVesting, Ownable, ReentrancyGuard {
 
   fallback() external payable {}
 
-  /**
-   * @dev Returns the number of vesting schedules associated to a beneficiary.
-   * @return the number of vesting schedules
-   */
-  function getVestingSchedulesCountByBeneficiary(address _beneficiary)
-    external
-    view
-    returns (uint256)
-  {
-    return holdersVestingCount[_beneficiary];
-  }
-
-  /**
-   * @dev Returns the vesting schedule id at the given index.
-   * @return the vesting id
-   */
-  function getVestingIdAtIndex(uint256 index) external view returns (bytes32) {
-    require(
-      index < getVestingSchedulesCount(),
-      "TokenVesting: index out of bounds"
-    );
-    return vestingSchedulesIds[index];
-  }
-
-  /**
-   * @notice Returns the vesting schedule information for a given holder and index.
-   * @return the vesting schedule structure information
-   */
-  function getVestingScheduleByAddressAndIndex(address holder, uint256 index)
-    external
-    view
-    returns (VestingSchedule memory)
-  {
-    return
-      getVestingSchedule(
-        computeVestingScheduleIdForAddressAndIndex(holder, index)
-      );
-  }
-
-  /**
-   * @notice Returns the total amount of vesting schedules.
-   * @return the total amount of vesting schedules
-   */
-  function getVestingSchedulesTotalAmount() external view returns (uint256) {
-    return vestingSchedulesTotalAmount;
-  }
-
-  /**
-   * @dev Returns the address of the ERC20 token managed by the vesting contract.
-   */
-  function getToken() external view returns (address) {
-    return address(_token);
-  }
 
   /**
    * @notice Creates a new vesting schedule for a beneficiary.
@@ -130,13 +77,13 @@ contract TokenVesting is ITokenVesting, Ownable, ReentrancyGuard {
   ) public onlyOwner {
     require(
       this.getWithdrawableAmount() >= _amount,
-      "TokenVesting: cannot create vesting schedule because not sufficient tokens"
+      "insufficient-tokens"
     );
-    require(_duration > 0, "TokenVesting: duration must be > 0");
-    require(_amount > 0, "TokenVesting: amount must be > 0");
+    require(_duration > 0, "invalid-duration");
+    require(_amount > 0, "invalid-amount");
     require(
       _slicePeriodSeconds >= 1,
-      "TokenVesting: slicePeriodSeconds must be >= 1"
+      "invalid-slice-period"
     );
     bytes32 vestingScheduleId = this.computeNextVestingScheduleIdForHolder(
       _beneficiary
@@ -194,7 +141,7 @@ contract TokenVesting is ITokenVesting, Ownable, ReentrancyGuard {
     ];
     require(
       vestingSchedule.revocable == true,
-      "TokenVesting: vesting is not revocable"
+      "not-revocable"
     );
     uint256 vestedAmount = _computeReleasableAmount(vestingSchedule);
     if (vestedAmount > 0) {
@@ -216,7 +163,7 @@ contract TokenVesting is ITokenVesting, Ownable, ReentrancyGuard {
   function withdraw(uint256 amount) public nonReentrant onlyOwner {
     require(
       this.getWithdrawableAmount() >= amount,
-      "TokenVesting: not enough withdrawable funds"
+      "insufficient-withdrawable-funds"
     );
     _token.safeTransfer(owner(), amount);
   }
@@ -254,12 +201,12 @@ contract TokenVesting is ITokenVesting, Ownable, ReentrancyGuard {
     bool isOwner = msg.sender == owner();
     require(
       isBeneficiary || isOwner,
-      "TokenVesting: only beneficiary and owner can release vested tokens"
+      "not-authorised"
     );
     uint256 vestedAmount = _computeReleasableAmount(vestingSchedule);
     require(
       vestedAmount >= amount,
-      "TokenVesting: cannot release tokens, not enough vested tokens"
+      "insufficient-vested-token"
     );
     vestingSchedule.released = vestingSchedule.released.add(amount);
     address payable beneficiaryPayable = payable(vestingSchedule.beneficiary);
