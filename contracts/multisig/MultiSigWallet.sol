@@ -22,38 +22,38 @@ contract MultiSigWallet is IMultiSigWallet {
   Transaction[] public transactions;
 
   modifier onlyOwner() {
-    require(isOwner[msg.sender], "not owner");
+    require(isOwner[msg.sender], "not-autorized");
     _;
   }
 
   modifier txExists(uint256 _txIndex) {
-    require(_txIndex < transactions.length, "tx does not exist");
+    require(_txIndex < transactions.length, "invalid-tx");
     _;
   }
 
   modifier notExecuted(uint256 _txIndex) {
-    require(!transactions[_txIndex].executed, "tx already executed");
+    require(!transactions[_txIndex].executed, "tx-already-executed");
     _;
   }
 
   modifier notConfirmed(uint256 _txIndex) {
-    require(!isConfirmed[_txIndex][msg.sender], "tx already confirmed");
+    require(!isConfirmed[_txIndex][msg.sender], "tx-already-confirmed");
     _;
   }
 
   constructor(address[] memory _owners, uint256 _numConfirmationsRequired) {
-    require(_owners.length > 0, "owners required");
+    require(_owners.length > 0, "owners-required");
     require(
       _numConfirmationsRequired > 0 &&
         _numConfirmationsRequired <= _owners.length,
-      "invalid number of required confirmations"
+      "invalid-confirmations"
     );
 
     for (uint256 i = 0; i < _owners.length; i++) {
       address owner = _owners[i];
 
-      require(owner != address(0), "invalid owner");
-      require(!isOwner[owner], "owner not unique");
+      require(owner != address(0), "invalid-owner");
+      require(!isOwner[owner], "owner-not-unique");
 
       isOwner[owner] = true;
       owners.push(owner);
