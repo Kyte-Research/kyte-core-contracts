@@ -24,13 +24,11 @@ contract KTEToken is
   constructor(
     string memory _name,
     string memory _symbol,
-    uint256 _totalSupply,
-    address _minter,
-    address _pauser
+    uint256 _totalSupply
   ) ERC20(_name, _symbol) ERC20Capped(_totalSupply) ERC20Permit(_name) {
     _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-    _setupRole(MINTER_ROLE, _minter);
-    _setupRole(PAUSER_ROLE, _pauser);
+    _setupRole(MINTER_ROLE, _msgSender());
+    _setupRole(PAUSER_ROLE, _msgSender());
   }
 
   function mint(address to, uint256 amount) public onlyRole(MINTER_ROLE) {
