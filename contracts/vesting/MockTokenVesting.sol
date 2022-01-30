@@ -36,4 +36,12 @@ contract MockTokenVesting is TokenVesting {
   ) public pure returns (bytes32) {
     return _computeVestingScheduleIdForAddressAndIndex(holder, index);
   }
+
+  function getVestingSchedulesCountByBeneficiary(address _beneficiary)
+    external
+    view
+    returns (uint256)
+  {
+    return holdersVestingCount[_beneficiary];
+  }
 }

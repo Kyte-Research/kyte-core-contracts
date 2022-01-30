@@ -16,7 +16,7 @@ contract TokenVesting is ITokenVesting, Ownable, ReentrancyGuard {
   using SafeERC20 for IERC20;
 
   // address of the ERC20 token
-  IERC20 public immutable _token;
+  IERC20 public immutable token;
 
   bytes32[] private vestingSchedulesIds;
   mapping(bytes32 => VestingSchedule) public vestingSchedules;
@@ -55,7 +55,7 @@ contract TokenVesting is ITokenVesting, Ownable, ReentrancyGuard {
    */
   constructor(address token_) {
     require(token_ != address(0x0), "invalid-token-address");
-    _token = IERC20(token_);
+    token = IERC20(token_);
   }
 
   receive() external payable {}
@@ -110,7 +110,7 @@ contract TokenVesting is ITokenVesting, Ownable, ReentrancyGuard {
     holdersVestingCount[_beneficiary] = currentVestingCount.add(1);
 
     if (_upFront > 0) {
-      _token.safeTransfer(_beneficiary, _upFront);
+      token.safeTransfer(_beneficiary, _upFront);
       emit UpfrontTokenTransfer(vestingScheduleId, _beneficiary, _upFront);
     }
 
@@ -164,7 +164,7 @@ contract TokenVesting is ITokenVesting, Ownable, ReentrancyGuard {
       this.getWithdrawableAmount() >= amount,
       "insufficient-withdrawable-funds"
     );
-    _token.safeTransfer(owner(), amount);
+    token.safeTransfer(owner(), amount);
   }
 
   /**
@@ -204,7 +204,7 @@ contract TokenVesting is ITokenVesting, Ownable, ReentrancyGuard {
     vestingSchedule.released = vestingSchedule.released.add(amount);
     address payable beneficiaryPayable = payable(vestingSchedule.beneficiary);
     vestingSchedulesTotalAmount = vestingSchedulesTotalAmount.sub(amount);
-    _token.safeTransfer(beneficiaryPayable, amount);
+    token.safeTransfer(beneficiaryPayable, amount);
     emit ReleaseVestedToken(
       vestingScheduleId,
       beneficiaryPayable,
@@ -253,7 +253,7 @@ contract TokenVesting is ITokenVesting, Ownable, ReentrancyGuard {
    * @return the amount of tokens
    */
   function getWithdrawableAmount() public view returns (uint256) {
-    return _token.balanceOf(address(this)).sub(vestingSchedulesTotalAmount);
+    return token.balanceOf(address(this)).sub(vestingSchedulesTotalAmount);
   }
 
   /**
