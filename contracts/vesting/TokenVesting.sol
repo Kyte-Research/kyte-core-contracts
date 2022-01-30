@@ -27,7 +27,10 @@ contract TokenVesting is ITokenVesting, Ownable, ReentrancyGuard {
    * @dev Reverts if no vesting schedule matches the passed identifier.
    */
   modifier onlyIfVestingScheduleExists(bytes32 vestingScheduleId) {
-    require(vestingSchedules[vestingScheduleId].initialized, "invalid-vesting-schedule");
+    require(
+      vestingSchedules[vestingScheduleId].initialized,
+      "invalid-vesting-schedule"
+    );
     _;
   }
 
@@ -35,8 +38,14 @@ contract TokenVesting is ITokenVesting, Ownable, ReentrancyGuard {
    * @dev Reverts if the vesting schedule does not exist or has been revoked.
    */
   modifier onlyIfVestingScheduleNotRevoked(bytes32 vestingScheduleId) {
-    require(vestingSchedules[vestingScheduleId].initialized, "vesting-schedule-not-initialized");
-    require(!vestingSchedules[vestingScheduleId].revoked, "vesting-schedule-revoked");
+    require(
+      vestingSchedules[vestingScheduleId].initialized,
+      "vesting-schedule-not-initialized"
+    );
+    require(
+      !vestingSchedules[vestingScheduleId].revoked,
+      "vesting-schedule-revoked"
+    );
     _;
   }
 
@@ -52,7 +61,6 @@ contract TokenVesting is ITokenVesting, Ownable, ReentrancyGuard {
   receive() external payable {}
 
   fallback() external payable {}
-
 
   /**
    * @notice Creates a new vesting schedule for a beneficiary.
@@ -75,16 +83,10 @@ contract TokenVesting is ITokenVesting, Ownable, ReentrancyGuard {
     uint256 _amount,
     uint256 _upFront
   ) public onlyOwner {
-    require(
-      this.getWithdrawableAmount() >= _amount,
-      "insufficient-tokens"
-    );
+    require(this.getWithdrawableAmount() >= _amount, "insufficient-tokens");
     require(_duration > 0, "invalid-duration");
     require(_amount > 0, "invalid-amount");
-    require(
-      _slicePeriodSeconds >= 1,
-      "invalid-slice-period"
-    );
+    require(_slicePeriodSeconds >= 1, "invalid-slice-period");
     bytes32 vestingScheduleId = this.computeNextVestingScheduleIdForHolder(
       _beneficiary
     );
@@ -139,10 +141,7 @@ contract TokenVesting is ITokenVesting, Ownable, ReentrancyGuard {
     VestingSchedule storage vestingSchedule = vestingSchedules[
       vestingScheduleId
     ];
-    require(
-      vestingSchedule.revocable == true,
-      "not-revocable"
-    );
+    require(vestingSchedule.revocable == true, "not-revocable");
     uint256 vestedAmount = _computeReleasableAmount(vestingSchedule);
     if (vestedAmount > 0) {
       release(vestingScheduleId, vestedAmount);
@@ -199,15 +198,9 @@ contract TokenVesting is ITokenVesting, Ownable, ReentrancyGuard {
     ];
     bool isBeneficiary = msg.sender == vestingSchedule.beneficiary;
     bool isOwner = msg.sender == owner();
-    require(
-      isBeneficiary || isOwner,
-      "not-authorised"
-    );
+    require(isBeneficiary || isOwner, "not-authorised");
     uint256 vestedAmount = _computeReleasableAmount(vestingSchedule);
-    require(
-      vestedAmount >= amount,
-      "insufficient-vested-token"
-    );
+    require(vestedAmount >= amount, "insufficient-vested-token");
     vestingSchedule.released = vestingSchedule.released.add(amount);
     address payable beneficiaryPayable = payable(vestingSchedule.beneficiary);
     vestingSchedulesTotalAmount = vestingSchedulesTotalAmount.sub(amount);
@@ -272,7 +265,7 @@ contract TokenVesting is ITokenVesting, Ownable, ReentrancyGuard {
     returns (bytes32)
   {
     return
-      computeVestingScheduleIdForAddressAndIndex(
+      _computeVestingScheduleIdForAddressAndIndex(
         holder,
         holdersVestingCount[holder]
       );
@@ -293,7 +286,7 @@ contract TokenVesting is ITokenVesting, Ownable, ReentrancyGuard {
 
     for (uint256 i = 0; i < holderTotalCounts; i++) {
       holderVestingSchedules[i] = getVestingSchedule(
-        computeVestingScheduleIdForAddressAndIndex(holder, i)
+        _computeVestingScheduleIdForAddressAndIndex(holder, i)
       );
     }
     return holderVestingSchedules;
@@ -302,10 +295,10 @@ contract TokenVesting is ITokenVesting, Ownable, ReentrancyGuard {
   /**
    * @dev Computes the vesting schedule identifier for an address and an index.
    */
-  function computeVestingScheduleIdForAddressAndIndex(
+  function _computeVestingScheduleIdForAddressAndIndex(
     address holder,
     uint256 index
-  ) public pure returns (bytes32) {
+  ) internal pure returns (bytes32) {
     return keccak256(abi.encodePacked(holder, index));
   }
 
@@ -318,7 +311,7 @@ contract TokenVesting is ITokenVesting, Ownable, ReentrancyGuard {
     view
     returns (uint256)
   {
-    uint256 currentTime = block.timestamp;
+    uint256 currentTime = _blockTimestamp();
     if (
       (currentTime < vestingSchedule.cliff) || vestingSchedule.revoked == true
     ) {
@@ -338,5 +331,9 @@ contract TokenVesting is ITokenVesting, Ownable, ReentrancyGuard {
       vestedAmount = vestedAmount.sub(vestingSchedule.released);
       return vestedAmount;
     }
+  }
+
+  function _blockTimestamp() internal view virtual returns (uint256) {
+    return block.timestamp;
   }
 }
