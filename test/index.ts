@@ -1,1 +1,1 @@
-import "./token-vesting";
+import "./TokenVesting.spec";

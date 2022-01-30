@@ -2,6 +2,7 @@ import { ContractFactory, Contract } from "@ethersproject/contracts";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { expect } from "chai";
 import { ethers } from "hardhat";
+import { MOCK_TOKEN_VESTING_CONTRACT, TOKEN_CONTRACT } from '../scripts/constant';
 
 describe("TokenVesting", function () {
   let Token: ContractFactory;
@@ -13,19 +14,21 @@ describe("TokenVesting", function () {
   let addrs: SignerWithAddress[];
 
   before(async function () {
-    Token = await ethers.getContractFactory("Token");
-    TokenVesting = await ethers.getContractFactory("MockTokenVesting");
+    Token = await ethers.getContractFactory(TOKEN_CONTRACT);
+    TokenVesting = await ethers.getContractFactory(MOCK_TOKEN_VESTING_CONTRACT);
   });
   beforeEach(async function () {
     [owner, addr1, addr2, ...addrs] = await ethers.getSigners();
     testToken = await Token.deploy("Test Token", "TT", 1000000);
     await testToken.deployed();
+    await testToken.mint(owner, 1000000);
   });
 
   describe("Vesting", function () {
     it("Should assign the total supply of tokens to the owner", async function () {
       const ownerBalance = await testToken.balanceOf(owner.address);
-      expect(await testToken.totalSupply()).to.equal(ownerBalance);
+      const totalSupply = await testToken.totalSupply();
+      expect(totalSupply).to.equal(ownerBalance);
     });
 
     it("Should vest tokens gradually", async function () {
