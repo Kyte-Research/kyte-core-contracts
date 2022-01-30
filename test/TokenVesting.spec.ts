@@ -2,7 +2,10 @@ import { ContractFactory, Contract } from "@ethersproject/contracts";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { MOCK_TOKEN_VESTING_CONTRACT, TOKEN_CONTRACT } from '../scripts/constant';
+import {
+  MOCK_TOKEN_VESTING_CONTRACT,
+  TOKEN_CONTRACT,
+} from "../scripts/constant";
 
 describe("TokenVesting", function () {
   let Token: ContractFactory;
@@ -33,6 +36,26 @@ describe("TokenVesting", function () {
       expect(totalSupply).to.equal(ownerBalance);
     });
 
+    /*
+     * TEST SUMMARY
+     * deploy vesting contract
+     * send tokens to vesting contract
+     * create new vesting schedule (100 tokens)
+     * check that vested amount is 0
+     * set time to half the vesting period
+     * check that vested amount is half the total amount to vest (50 tokens)
+     * check that only beneficiary can try to release vested tokens
+     * check that beneficiary cannot release more than the vested amount
+     * release 10 tokens and check that a Transfer event is emitted with a value of 10
+     * check that the released amount is 10
+     * check that the vested amount is now 40
+     * set current time after the end of the vesting period
+     * check that the vested amount is 90 (100 - 10 released tokens)
+     * release all vested tokens (90)
+     * check that the number of released tokens is 100
+     * check that the vested amount is 0
+     * check that anyone cannot revoke a vesting
+     */
     it("Should vest tokens gradually", async function () {
       // deploy vesting contract
       const tokenVesting = await TokenVesting.deploy(testToken.address);
@@ -104,16 +127,12 @@ describe("TokenVesting", function () {
       // check that only beneficiary can try to release vested tokens
       await expect(
         tokenVesting.connect(addr2).release(vestingScheduleId, 100)
-      ).to.be.revertedWith(
-        "not-authorised"
-      );
+      ).to.be.revertedWith("not-authorised");
 
       // check that beneficiary cannot release more than the vested amount
       await expect(
         tokenVesting.connect(beneficiary).release(vestingScheduleId, 100)
-      ).to.be.revertedWith(
-        "insufficient-vested-token"
-      );
+      ).to.be.revertedWith("insufficient-vested-token");
 
       // release 10 tokens and check that a Transfer event is emitted with a value of 10
       await expect(
@@ -175,30 +194,48 @@ describe("TokenVesting", function () {
         tokenVesting.connect(addr2).revoke(vestingScheduleId)
       ).to.be.revertedWith("Ownable: caller is not the owner");
       await tokenVesting.revoke(vestingScheduleId);
-
-      /*
-       * TEST SUMMARY
-       * deploy vesting contract
-       * send tokens to vesting contract
-       * create new vesting schedule (100 tokens)
-       * check that vested amount is 0
-       * set time to half the vesting period
-       * check that vested amount is half the total amount to vest (50 tokens)
-       * check that only beneficiary can try to release vested tokens
-       * check that beneficiary cannot release more than the vested amount
-       * release 10 tokens and check that a Transfer event is emitted with a value of 10
-       * check that the released amount is 10
-       * check that the vested amount is now 40
-       * set current time after the end of the vesting period
-       * check that the vested amount is 90 (100 - 10 released tokens)
-       * release all vested tokens (90)
-       * check that the number of released tokens is 100
-       * check that the vested amount is 0
-       * check that anyone cannot revoke a vesting
-       */
     });
 
-    it("Should release vested tokens if revoked", async function () {
+    it("Should release the upfront token on vesting schedule creation", async () => {
+      // deploy vesting contract
+      const tokenVesting = await TokenVesting.deploy(testToken.address);
+      await tokenVesting.deployed();
+      expect((await tokenVesting.token()).toString()).to.equal(
+        testToken.address
+      );
+      // send tokens to vesting contract
+      await expect(testToken.transfer(tokenVesting.address, 1000))
+        .to.emit(testToken, "Transfer")
+        .withArgs(owner.address, tokenVesting.address, 1000);
+
+      const baseTime = 1622551248;
+      const beneficiary = addr1;
+      const startTime = baseTime;
+      const cliff = 0;
+      const duration = 1000;
+      const slicePeriodSeconds = 1;
+      const revokable = true;
+      const amount = 100;
+      const upfront = 10;
+
+      // create new vesting schedule
+      expect(
+        await tokenVesting.createVestingSchedule(
+          beneficiary.address,
+          startTime,
+          cliff,
+          duration,
+          slicePeriodSeconds,
+          revokable,
+          amount,
+          upfront
+        )
+      )
+        .to.emit(testToken, "Transfer")
+        .withArgs(tokenVesting.address, beneficiary.address, upfront);
+    });
+
+    it("Should release vested tokens if revoked", async () => {
       // deploy vesting contract
       const tokenVesting = await TokenVesting.deploy(testToken.address);
       await tokenVesting.deployed();
