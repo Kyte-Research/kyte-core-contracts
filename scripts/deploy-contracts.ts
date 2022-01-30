@@ -1,5 +1,5 @@
 import { Contract } from "@ethersproject/contracts";
-import { MULTISIG_WALLET_CONTRACT } from "./constant";
+import { MULTISIG_WALLET_CONTRACT, TOKEN_VESTING_CONTRACT } from "./constant";
 import {
   TOKEN_CONTRACT,
   TOKEN_NAME,
@@ -27,4 +27,12 @@ export async function deployMultisig(
   );
   const multiSigWallet = await MultiSigWallet.deploy(owners, numOfConfirmation);
   return multiSigWallet;
+}
+
+export async function deployTokenVesting(token: string): Promise<Contract> {
+  const TokenVesting = await hre.ethers.getContractFactory(
+    TOKEN_VESTING_CONTRACT
+  );
+  const tokenVesting = await TokenVesting.deploy(token);
+  return tokenVesting;
 }
