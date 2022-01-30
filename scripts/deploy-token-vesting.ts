@@ -6,7 +6,7 @@
 import { deployTokenVesting } from "./deploy-contracts";
 
 async function main() {
-  const tokenAddr = "";
+  const tokenAddr = process.env.TOKEN_ADDRESS || "TOKEN_ADDRESS";
   const tokenVesting = await deployTokenVesting(tokenAddr);
 
   await tokenVesting.deployed();
