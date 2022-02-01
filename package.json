@@ -5,15 +5,13 @@
     "clean": "npx hardhat clean",
     "size": "npx hardhat size-contracts",
     "compile": "npx hardhat compile",
-    "prettier": "npx prettier --write .",
+    "format": "npx prettier --write .",
     "test": "npx hardhat test --network localhost",
     "coverage": "npx hardhat coverage --solcoverjs ./.solcover.js",
     "flatten": "npx hardhat flatten",
     "check:format": "solhint contracts/*.sol --fix",
-    "deploy:local": "npx hardhat run scripts/deploy-mock.ts --network localhost",
-    "deploy:fuji": "npx hardhat run scripts/deploy.ts --network fuji",
-    "tools:surya:graph": "surya graph ./contracts/**/*.sol | dot -Tpng > build/TokenVesting.png",
-    "tools:surya:report": "surya mdreport build/docs/surya-report.md contracts/TokenVesting.sol"
+    "deploy:token:local": "npx hardhat run scripts/deploy-token.ts --network localhost",
+    "deploy:token-vesting:local": "npx hardhat run scripts/deploy-token-vesting.ts --network localhost"
   },
   "files": [
     "build/abi",
@@ -54,7 +52,6 @@
   "dependencies": {
     "@openzeppelin/contracts": "^4.4.2",
     "hardhat-abi-exporter": "^2.8.0",
-    "hardhat-contract-sizer": "^2.4.0",
-    "surya": "^0.4.5"
+    "hardhat-contract-sizer": "^2.4.0"
   }
 }

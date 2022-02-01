@@ -15,23 +15,23 @@ import "./tasks";
 
 const config: HardhatUserConfig = {
   solidity: {
-    version: '0.8.4',
+    version: "0.8.4",
     settings: {
       optimizer: {
         enabled: true,
-        runs: 800
+        runs: 800,
       },
       metadata: {
         // do not include the metadata hash, since this is machine dependent
         // and we want all generated code to be deterministic
         // https://docs.soliditylang.org/en/v0.7.6/metadata.html
-        bytecodeHash: 'none'
-      }
-    }
+        bytecodeHash: "none",
+      },
+    },
   },
   networks: {
     hardhat: {
-      allowUnlimitedContractSize: false
+      allowUnlimitedContractSize: false,
     },
     ropsten: {
       url: process.env.ROPSTEN_URL || "",
@@ -39,20 +39,18 @@ const config: HardhatUserConfig = {
         process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },
     fuji: {
-      url: 'https://api.avax-test.network/ext/bc/C/rpc',
+      url: "https://api.avax-test.network/ext/bc/C/rpc",
       gasPrice: 225000000000,
       chainId: 43113,
-      accounts: {
-        mnemonic: process.env.FUJI_MNEMONIC,
-        initialIndex: 0
-      }
+      accounts:
+        process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },
     avaxMainnet: {
-      url: 'https://api.avax.network/ext/bc/C/rpc',
+      url: "https://api.avax.network/ext/bc/C/rpc",
       gasPrice: 225000000000,
       chainId: 43114,
-      accounts: []
-    }
+      accounts: [],
+    },
   },
   gasReporter: {
     enabled: process.env.REPORT_GAS !== undefined,
@@ -66,7 +64,7 @@ const config: HardhatUserConfig = {
     clear: true,
     flat: true,
     spacing: 2,
-  }
+  },
 };
 
 export default config;

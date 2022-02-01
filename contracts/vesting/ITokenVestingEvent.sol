@@ -19,6 +19,14 @@ interface ITokenVestingEvent {
         uint256 upFront
     );
     event RevokeVestingShedule(bytes32 vestingScheduleId);
-    event UpfrontTokenTransfer(bytes32 vestingScheduleId, address beneficiary, uint256 amount);
-    event ReleaseVestedToken(bytes32 vestingScheduleId, address beneficiary, uint256 amountReleased);
+    event UpfrontTokenTransfer(
+        bytes32 vestingScheduleId,
+        address beneficiary,
+        uint256 amount
+    );
+    event ReleaseVestedToken(
+        bytes32 vestingScheduleId,
+        address beneficiary,
+        uint256 amountReleased
+    );
 }

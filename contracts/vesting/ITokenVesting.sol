@@ -3,8 +3,8 @@ pragma solidity ^0.8.0;
 
 import "./ITokenVestingEvent.sol";
 
-interface ITokenVesting is ITokenVestingEvent  {
-   struct VestingSchedule {
+interface ITokenVesting is ITokenVestingEvent {
+    struct VestingSchedule {
         bool initialized;
         // beneficiary of tokens after they are released
         address beneficiary;
