@@ -6,12 +6,17 @@
 import { deployTokenVesting } from "./deploy-contracts";
 
 async function main() {
-  const tokenAddr = process.env.TOKEN_ADDRESS || "TOKEN_ADDRESS";
+  const tokenAddr = process.env.TOKEN_ADDRESS;
+
+  if (!tokenAddr) {
+    throw new Error("Please specify a TOKEN_ADDRESS in environment variables")
+  }
+
   const tokenVesting = await deployTokenVesting(tokenAddr);
 
   await tokenVesting.deployed();
 
-  console.log("Token deployed to:", tokenVesting.address);
+  console.log("Token Vesting deployed to:", tokenVesting.address);
 }
 
 main().catch((error) => {
