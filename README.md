@@ -1,4 +1,28 @@
-# Advanced Sample Hardhat Project
+# Kyte Core Contracts
+
+This repository contains the core contracts for the Kyte platform
+
+## Local Deployment
+
+1. Open the root directory for kyte-core-contracts
+2. Run `npm install`
+3. Start a node using `npx hardhat node`
+
+### Deploy Token
+
+First deploy the token contract:
+
+```
+npm run deploy:token:local
+```
+
+### Deploy Vesting
+
+Then deploy the token vesting contract:
+```
+npm run deploy:token-vesting:local
+```
+
 
 This project demonstrates an advanced Hardhat use case, integrating other tools commonly used alongside Hardhat in the ecosystem.
 
