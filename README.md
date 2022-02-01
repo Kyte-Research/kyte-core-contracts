@@ -11,13 +11,16 @@ This repository contains the core contracts for the Kyte platform
 
 ## Deploy Token
 
-First deploy the token contract:
+To deploy the token contract:
 
 ```
 npm run deploy:token:local
 ```
 
 ## Deploy Vesting
+
+The vesting contract needs a TOKEN_ADDRESS in the environment variables.
+Before deploying token vesting, add the TOKEN_ADDRESS in your `.env` file.
 
 Then deploy the token vesting contract:
 ```
