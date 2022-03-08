@@ -73,10 +73,12 @@ contract TokenVesting is ITokenVesting, Ownable, ReentrancyGuard {
         uint256 _upFront
     ) external onlyOwner {
         require(_beneficiary != address(0), "invalid-beneficiary");
-        require(this.getWithdrawableAmount() >= _amount, "insufficient-tokens");
         require(_duration > 0, "invalid-duration");
         require(_amount > 0, "invalid-amount");
         require(_slicePeriodSeconds >= 1, "invalid-slice-period");
+          // Transfer the vesting tokens under the control of the vesting contract
+        token.safeTransferFrom(msg.sender, address(this), _amount.add(_upFront));
+
         bytes32 vestingScheduleId = this.computeNextVestingScheduleIdForHolder(
             _beneficiary
         );
@@ -98,7 +100,7 @@ contract TokenVesting is ITokenVesting, Ownable, ReentrancyGuard {
         vestingSchedulesIds.push(vestingScheduleId);
         uint256 currentVestingCount = holdersVestingCount[_beneficiary];
         holdersVestingCount[_beneficiary] = currentVestingCount.add(1);
-
+       
         if (_upFront > 0) {
             token.safeTransfer(_beneficiary, _upFront);
             emit UpfrontTokenTransfer(
@@ -148,7 +150,7 @@ contract TokenVesting is ITokenVesting, Ownable, ReentrancyGuard {
         );
         vestingSchedule.revoked = true;
         if (unreleased > 0) {
-            token.safeTransfer(owner(), unreleased);
+            token.safeTransfer(this.owner(), unreleased);
         }
 
         emit RevokeVestingShedule(vestingScheduleId);
