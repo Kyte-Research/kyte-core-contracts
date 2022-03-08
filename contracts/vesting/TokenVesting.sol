@@ -240,14 +240,6 @@ contract TokenVesting is ITokenVesting, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @dev Returns the amount of tokens that can be withdrawn by the owner.
-     * @return the amount of tokens
-     */
-    function getWithdrawableAmount() public view returns (uint256) {
-        return token.balanceOf(address(this)).sub(vestingSchedulesTotalAmount);
-    }
-
-    /**
      * @dev Computes the next vesting schedule identifier for a given holder address.
      */
     function computeNextVestingScheduleIdForHolder(address holder)
