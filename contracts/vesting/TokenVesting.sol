@@ -24,17 +24,6 @@ contract TokenVesting is ITokenVesting, Ownable, ReentrancyGuard {
     mapping(address => uint256) public holdersVestingCount;
 
     /**
-     * @dev Reverts if no vesting schedule matches the passed identifier.
-     */
-    modifier onlyIfVestingScheduleExists(bytes32 vestingScheduleId) {
-        require(
-            vestingSchedules[vestingScheduleId].initialized,
-            "invalid-vesting-schedule"
-        );
-        _;
-    }
-
-    /**
      * @dev Reverts if the vesting schedule does not exist or has been revoked.
      */
     modifier onlyIfVestingScheduleNotRevoked(bytes32 vestingScheduleId) {
@@ -82,7 +71,8 @@ contract TokenVesting is ITokenVesting, Ownable, ReentrancyGuard {
         bool _revocable,
         uint256 _amount,
         uint256 _upFront
-    ) public onlyOwner {
+    ) external onlyOwner {
+        require(_beneficiary != address(0), "invalid-beneficiary");
         require(this.getWithdrawableAmount() >= _amount, "insufficient-tokens");
         require(_duration > 0, "invalid-duration");
         require(_amount > 0, "invalid-amount");
@@ -138,14 +128,14 @@ contract TokenVesting is ITokenVesting, Ownable, ReentrancyGuard {
      * @param vestingScheduleId the vesting schedule identifier
      */
     function revoke(bytes32 vestingScheduleId)
-        public
+        external
         onlyOwner
         onlyIfVestingScheduleNotRevoked(vestingScheduleId)
     {
         VestingSchedule storage vestingSchedule = vestingSchedules[
             vestingScheduleId
         ];
-        require(vestingSchedule.revocable == true, "not-revocable");
+        require(vestingSchedule.revocable, "not-revocable");
         uint256 vestedAmount = _computeReleasableAmount(vestingSchedule);
         if (vestedAmount > 0) {
             release(vestingScheduleId, vestedAmount);
@@ -157,20 +147,11 @@ contract TokenVesting is ITokenVesting, Ownable, ReentrancyGuard {
             unreleased
         );
         vestingSchedule.revoked = true;
+        if (unreleased > 0) {
+            token.safeTransfer(owner(), unreleased);
+        }
 
         emit RevokeVestingShedule(vestingScheduleId);
-    }
-
-    /**
-     * @notice Withdraw the specified amount if possible.
-     * @param amount the amount to withdraw
-     */
-    function withdraw(uint256 amount) public nonReentrant onlyOwner {
-        require(
-            this.getWithdrawableAmount() >= amount,
-            "insufficient-withdrawable-funds"
-        );
-        token.safeTransfer(owner(), amount);
     }
 
     /**
@@ -178,7 +159,7 @@ contract TokenVesting is ITokenVesting, Ownable, ReentrancyGuard {
      * @param vestingScheduleId the vesting schedule identifier
      */
     function releaseAllVested(bytes32 vestingScheduleId)
-        public
+        external
         nonReentrant
         onlyIfVestingScheduleNotRevoked(vestingScheduleId)
     {
@@ -280,27 +261,6 @@ contract TokenVesting is ITokenVesting, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @dev Returns all vesting schedules of the holder
-     */
-    function getAllVestingScheduleForHolder(address holder)
-        public
-        view
-        returns (VestingSchedule[] memory)
-    {
-        uint256 holderTotalCounts = holdersVestingCount[holder];
-        VestingSchedule[] memory holderVestingSchedules = new VestingSchedule[](
-            holderTotalCounts
-        );
-
-        for (uint256 i = 0; i < holderTotalCounts; i++) {
-            holderVestingSchedules[i] = getVestingSchedule(
-                _computeVestingScheduleIdForAddressAndIndex(holder, i)
-            );
-        }
-        return holderVestingSchedules;
-    }
-
-    /**
      * @dev Computes the vesting schedule identifier for an address and an index.
      */
     function _computeVestingScheduleIdForAddressAndIndex(
@@ -320,10 +280,7 @@ contract TokenVesting is ITokenVesting, Ownable, ReentrancyGuard {
         returns (uint256)
     {
         uint256 currentTime = _blockTimestamp();
-        if (
-            (currentTime < vestingSchedule.cliff) ||
-            vestingSchedule.revoked == true
-        ) {
+        if ((currentTime < vestingSchedule.cliff) || vestingSchedule.revoked) {
             return 0;
         } else if (
             currentTime >= vestingSchedule.start.add(vestingSchedule.duration)
