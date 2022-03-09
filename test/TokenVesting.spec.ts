@@ -63,15 +63,7 @@ describe("TokenVesting", function () {
       expect((await tokenVesting.token()).toString()).to.equal(
         testToken.address
       );
-      // send tokens to vesting contract
-      await expect(testToken.transfer(tokenVesting.address, 1000))
-        .to.emit(testToken, "Transfer")
-        .withArgs(owner.address, tokenVesting.address, 1000);
-      const vestingContractBalance = await testToken.balanceOf(
-        tokenVesting.address
-      );
-      expect(vestingContractBalance).to.equal(1000);
-      expect(await tokenVesting.getWithdrawableAmount()).to.equal(1000);
+  
 
       const baseTime = 1622551248;
       const beneficiary = addr1;
@@ -82,6 +74,8 @@ describe("TokenVesting", function () {
       const revokable = true;
       const amount = 100;
       const upfront = 0;
+
+      await testToken.approve(tokenVesting.address, amount);
 
       // create new vesting schedule
       await tokenVesting.createVestingSchedule(
@@ -94,6 +88,10 @@ describe("TokenVesting", function () {
         amount,
         upfront
       );
+      const vestingContractBalance = await testToken.balanceOf(
+        tokenVesting.address
+      );
+      expect(vestingContractBalance).to.equal(amount);
       expect(await tokenVesting.getVestingSchedulesCount()).to.be.equal(1);
       expect(
         await tokenVesting.getVestingSchedulesCountByBeneficiary(
@@ -203,11 +201,7 @@ describe("TokenVesting", function () {
       expect((await tokenVesting.token()).toString()).to.equal(
         testToken.address
       );
-      // send tokens to vesting contract
-      await expect(testToken.transfer(tokenVesting.address, 1000))
-        .to.emit(testToken, "Transfer")
-        .withArgs(owner.address, tokenVesting.address, 1000);
-
+    
       const baseTime = 1622551248;
       const beneficiary = addr1;
       const startTime = baseTime;
@@ -218,6 +212,8 @@ describe("TokenVesting", function () {
       const amount = 100;
       const upfront = 10;
 
+      await testToken.approve(tokenVesting.address, amount + upfront);
+      
       // create new vesting schedule
       expect(
         await tokenVesting.createVestingSchedule(
@@ -242,10 +238,6 @@ describe("TokenVesting", function () {
       expect((await tokenVesting.token()).toString()).to.equal(
         testToken.address
       );
-      // send tokens to vesting contract
-      await expect(testToken.transfer(tokenVesting.address, 1000))
-        .to.emit(testToken, "Transfer")
-        .withArgs(owner.address, tokenVesting.address, 1000);
 
       const baseTime = 1622551248;
       const beneficiary = addr1;
@@ -256,6 +248,8 @@ describe("TokenVesting", function () {
       const revokable = true;
       const amount = 100;
       const upfront = 0;
+
+      await testToken.approve(tokenVesting.address, amount + upfront);
 
       // create new vesting schedule
       await tokenVesting.createVestingSchedule(
@@ -282,7 +276,9 @@ describe("TokenVesting", function () {
 
       await expect(tokenVesting.revoke(vestingScheduleId))
         .to.emit(testToken, "Transfer")
-        .withArgs(tokenVesting.address, beneficiary.address, 50);
+        .withArgs(tokenVesting.address, beneficiary.address, 50)
+        .to.emit(testToken, "Transfer")
+        .withArgs(tokenVesting.address, owner.address, 50);
     });
 
     it("Should compute vesting schedule index", async function () {
@@ -310,7 +306,7 @@ describe("TokenVesting", function () {
     it("Should check input parameters for createVestingSchedule method", async function () {
       const tokenVesting = await TokenVesting.deploy(testToken.address);
       await tokenVesting.deployed();
-      await testToken.transfer(tokenVesting.address, 1000);
+      await testToken.approve(tokenVesting.address, 1000);
       const time = Date.now();
       await expect(
         tokenVesting.createVestingSchedule(
