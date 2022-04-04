@@ -27,6 +27,7 @@ interface ITokenVestingEvent {
     event ReleaseVestedToken(
         bytes32 vestingScheduleId,
         address beneficiary,
-        uint256 amountReleased
+        uint256 amountReleased,
+        uint256 amount
     );
 }
