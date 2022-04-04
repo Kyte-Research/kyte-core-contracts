@@ -199,7 +199,8 @@ contract TokenVesting is ITokenVesting, Ownable, ReentrancyGuard {
         emit ReleaseVestedToken(
             vestingScheduleId,
             beneficiaryPayable,
-            vestedAmount
+            vestedAmount,
+            amount
         );
     }
 
