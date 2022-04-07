@@ -1,5 +1,6 @@
 import { task } from "hardhat/config";
 import "@nomiclabs/hardhat-waffle";
+import { keccak256, toUtf8Bytes } from "ethers/lib/utils";
 
 task("mint-token", "Mint token")
   .addParam("address", "Token address")
@@ -21,7 +22,9 @@ task("mint-token", "Mint token")
       signer
     );
 
-    await kteToken.mint(to, hre.ethers.utils.parseUnits(tokens, 18));
+    await kteToken.mint(to, hre.ethers.utils.parseUnits(tokens, 18), {
+      gasLimit: 8000000,
+    });
   });
 
 task("pause", "Pause")
@@ -74,4 +77,60 @@ task("approve", "Approve to spend")
       signer
     );
     await kteToken.approve(sa, hre.ethers.utils.parseUnits(amount, 18));
+  });
+
+task("grant-admin", "Give role to any user")
+  .addParam("to", "Address of the user")
+  .addParam("address", "Token address")
+  .setAction(async (args, hre) => {
+    const { to, address } = args;
+    const accounts = await hre.ethers.getSigners();
+    const signer = accounts[0];
+
+    const KTEToken = await hre.ethers.getContractFactory("KTEToken");
+    const kteToken = new hre.ethers.Contract(
+      address,
+      KTEToken.interface,
+      signer
+    );
+    await kteToken.grantRole(
+      "0x0000000000000000000000000000000000000000000000000000000000000000",
+      to
+    );
+  });
+
+task("grant-minter", "Give role to any user")
+  .addParam("to", "Address of the user")
+  .addParam("address", "Token address")
+  .setAction(async (args, hre) => {
+    const { to, address } = args;
+    const roleKecca = keccak256("MINTER_ROLE");
+    const accounts = await hre.ethers.getSigners();
+    const signer = accounts[0];
+
+    const KTEToken = await hre.ethers.getContractFactory("KTEToken");
+    const kteToken = new hre.ethers.Contract(
+      address,
+      KTEToken.interface,
+      signer
+    );
+    await kteToken.grantRole(roleKecca, to);
+  });
+
+task("revoke-role", "Give role to any user")
+  .addParam("to", "Address of the user")
+  .addParam("address", "Token address")
+  .setAction(async (args, hre) => {
+    const { to, address } = args;
+    const roleKecca = keccak256(toUtf8Bytes("MINTER_ROLE"));
+    const accounts = await hre.ethers.getSigners();
+    const signer = accounts[0];
+
+    const KTEToken = await hre.ethers.getContractFactory("KTEToken");
+    const kteToken = new hre.ethers.Contract(
+      address,
+      KTEToken.interface,
+      signer
+    );
+    await kteToken.revokeRole(roleKecca, to);
   });
