@@ -103,6 +103,7 @@ task("grant-admin", "Give role to any user")
     );
   });
 
+
   task("revoke-admin", "Give role to any user")
   .addParam("of", "Address of the user")
   .addParam("address", "Token address")
@@ -121,7 +122,7 @@ task("grant-admin", "Give role to any user")
   });
 
 
-task("grant", "Give role to any user")
+task("grant-role", "Give role to any user")
   .addParam("to", "Address of the user")
   .addParam("address", "Token address")
   .addParam("role", "Role to be assigned")

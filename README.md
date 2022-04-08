@@ -1,6 +1,10 @@
-# Kyte Core Contracts
+# KTE Core Contracts
 
 This repository contains the core contracts for the Kyte platform
+
+🪙 $KTE is the apex token for all [Kyte](https://www.kyte.one) platforms.
+
+🏁 The first & flagship one being [AirLyft](https://www.airlyft.one).
 
 ## Local Deployment
 
