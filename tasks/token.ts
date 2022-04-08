@@ -2,6 +2,10 @@ import { task } from "hardhat/config";
 import "@nomiclabs/hardhat-waffle";
 import { keccak256, toUtf8Bytes } from "ethers/lib/utils";
 
+
+const ADMIN_ROLE = "0x0000000000000000000000000000000000000000000000000000000000000000";
+
+
 task("mint-token", "Mint token")
   .addParam("address", "Token address")
   .addOptionalParam("tokens", "Number of tokens")
@@ -41,7 +45,7 @@ task("pause", "Pause")
       signer
     );
 
-    await kteToken.pause();
+    await kteToken.pause({gasLimit: 8000000});
   });
 
 task("unpause", "Un Pause")
@@ -94,17 +98,17 @@ task("grant-admin", "Give role to any user")
       signer
     );
     await kteToken.grantRole(
-      "0x0000000000000000000000000000000000000000000000000000000000000000",
+      ADMIN_ROLE,
       to
     );
   });
 
-task("grant-minter", "Give role to any user")
-  .addParam("to", "Address of the user")
+
+  task("revoke-admin", "Give role to any user")
+  .addParam("of", "Address of the user")
   .addParam("address", "Token address")
   .setAction(async (args, hre) => {
-    const { to, address } = args;
-    const roleKecca = keccak256("MINTER_ROLE");
+    const { of, address } = args;
     const accounts = await hre.ethers.getSigners();
     const signer = accounts[0];
 
@@ -114,15 +118,17 @@ task("grant-minter", "Give role to any user")
       KTEToken.interface,
       signer
     );
-    await kteToken.grantRole(roleKecca, to);
+    await kteToken.revokeRole(ADMIN_ROLE, of);
   });
 
-task("revoke-role", "Give role to any user")
+
+task("grant-role", "Give role to any user")
   .addParam("to", "Address of the user")
   .addParam("address", "Token address")
+  .addParam("role", "Role to be assigned")
   .setAction(async (args, hre) => {
-    const { to, address } = args;
-    const roleKecca = keccak256(toUtf8Bytes("MINTER_ROLE"));
+    const { of, address, role='MINTER_ROLE' } = args;
+    const roleKecca = keccak256(toUtf8Bytes(role));
     const accounts = await hre.ethers.getSigners();
     const signer = accounts[0];
 
@@ -132,5 +138,25 @@ task("revoke-role", "Give role to any user")
       KTEToken.interface,
       signer
     );
-    await kteToken.revokeRole(roleKecca, to);
+    await kteToken.grantRole(roleKecca, of);
+  });
+
+
+task("revoke-role", "Revoke role of any user")
+  .addParam("of", "Address of the user")
+  .addParam("address", "Token address")
+  .addParam("role", "Role to be assigned")
+  .setAction(async (args, hre) => {
+    const { of, address, role = 'MINTER_ROLE' } = args;
+    const roleKecca = keccak256(toUtf8Bytes(role));
+    const accounts = await hre.ethers.getSigners();
+    const signer = accounts[0];
+
+    const KTEToken = await hre.ethers.getContractFactory("KTEToken");
+    const kteToken = new hre.ethers.Contract(
+      address,
+      KTEToken.interface,
+      signer
+    );
+    await kteToken.revokeRole(roleKecca, of);
   });
