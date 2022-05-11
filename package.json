@@ -11,7 +11,8 @@
     "flatten": "npx hardhat flatten",
     "check:format": "solhint contracts/*.sol --fix",
     "deploy:token:local": "npx hardhat run scripts/deploy-token.ts --network localhost",
-    "deploy:token-vesting:local": "npx hardhat run scripts/deploy-token-vesting.ts --network localhost"
+    "deploy:token-vesting:local": "npx hardhat run scripts/deploy-token-vesting.ts --network localhost",
+    "deploy:lp-token-timelock:local": "npx hardhat run scripts/deploy-lp-token-lock.ts --network localhost"
   },
   "files": [
     "build/abi",

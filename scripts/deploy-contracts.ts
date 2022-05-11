@@ -36,3 +36,19 @@ export async function deployTokenVesting(token: string): Promise<Contract> {
   const tokenVesting = await TokenVesting.deploy(token);
   return tokenVesting;
 }
+
+export async function deployVestingTokenTimelock(
+  token: string,
+  beneficiary: string,
+  releaseTime: string
+): Promise<Contract> {
+  const LPTokenTimelock = await hre.ethers.getContractFactory(
+    "LPTokenTimelock"
+  );
+  const tokenVesting = await LPTokenTimelock.deploy(
+    token,
+    beneficiary,
+    releaseTime
+  );
+  return tokenVesting;
+}
