@@ -47,7 +47,7 @@ describe("TimeLockTest", function () {
       );
     });
 
-    it("Release date is in 20 seconds from now & execution of release action is in 30 seconds from now so it should release", async function () {
+    it("Release date is in 20seconds from now & execution of release action is in 30seconds from now so it should release", async function () {
       // deploy vesting contract
       const datetime = new Date();
       datetime.setSeconds(datetime.getSeconds() + 20);
